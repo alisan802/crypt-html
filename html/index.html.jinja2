@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/enc-base64.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/cipher-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/sha256.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/sha1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/aes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/hmac.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/pbkdf2.min.js"></script>
+  </head>
+  <body>
+    <script>
+      const AES_DATA = {
+        iv: "{{ iv }}",
+        salt: "{{ salt }}",
+        encData: "{{ encrypted_text }}"
+      };
+      function decode() {
+        const iv = CryptoJS.enc.Base64.parse(AES_DATA.iv);
+        const salt = CryptoJS.enc.Base64.parse(AES_DATA.salt);
+        const encData = CryptoJS.enc.Base64.parse(AES_DATA.encData);
+        const password = CryptoJS.enc.Utf8.parse(document.getElementById('pass').value);
+        const aesKey = CryptoJS.PBKDF2(
+          password, salt, {
+            keySize: 256/32,
+            iterations: 1024*8,
+            hasher: CryptoJS.algo.SHA256,
+        });
+        console.log(password)
+        const options = {keySize: 256/32, iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7};
+        const decrypted = CryptoJS.AES.decrypt(
+          {"ciphertext": encData}, aesKey, options
+        );
+        let decryptOutpt = document.getElementById('decryptoutpt');
+        console.log(decrypted);
+        console.log(decrypted.toString(CryptoJS.enc.Utf8));
+        decryptOutpt.innerHTML = decrypted.toString(CryptoJS.enc.Utf8);
+      };
+    </script>
+    <div id="passinput">
+      <label for="pass">Password:</label>
+      <input type="password" id="pass" name="password" required />
+      <input type="button" value="Decrypt" onclick="decode()"/>
+    </div>
+    <div id="decryptoutpt"></div>
+  </body>
+</html>
